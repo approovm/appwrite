@@ -129,6 +129,11 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_CUSTOM_JWT_ALWAYS_CHECK
+      - _APP_CUSTOM_JWT_BASE64_SECRET
+      - _APP_CUSTOM_JWT_HEADER_NAME
+      - _APP_CUSTOM_JWT_MAX_AGE_SECONDS
+      - _APP_CUSTOM_JWT_LEEWAY_SECONDS
 
   appwrite-realtime:
     entrypoint: realtime

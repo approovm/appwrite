@@ -34,6 +34,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     /** @var Utopia\Locale\Locale $locale */
     /** @var array $clients */
 
+    // @TOOD remove var_dump
+    var_dump("-------------> START NEW REQUEST <-------------------");
+
     $domain = $request->getHostname();
     $domains = Config::getParam('domains', []);
     if (!array_key_exists($domain, $domains)) {
@@ -88,6 +91,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     };
 
     $route = $utopia->match($request);
+
+    // @TOOD remove var_dump
+    var_dump("URL PATH: {$route->getPath()}");
 
     if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);

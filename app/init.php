@@ -474,6 +474,52 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         }
     }
 
+    // START - CUSTOM JWT IMPLEMENTATION
+
+    // Some Context:
+    //  - Ideally this implementation would be a middleware class that we could
+    //    choose where to hook in the life cycle of the request.
+    //  - It needs to be performed before any other authorization mechanisms,
+    //    because when used as a security mechanism to identify WHAT is doing
+    //    the request in behalf of WHO is present in the request, the user, that
+    //    will be then authenticated and authorized with the usual mechanisms.
+
+    $alwaysCheckCustomJWT = App::getEnv('_APP_CUSTOM_JWT_ALWAYS_CHECK', false);
+    $customJwtMaxAgeSeconds = App::getEnv('_APP_CUSTOM_JWT_MAX_AGE_SECONDS', 300);
+    $customJwtLeewaySeconds = App::getEnv('_APP_CUSTOM_JWT_LEEWAY_SECONDS', 0);
+    $customJwtHeaderName = strtolower(App::getEnv('_APP_CUSTOM_JWT_HEADER_NAME', 'x-custom-jwt'));
+    $customJwtSecret = base64_decode(App::getEnv('_APP_CUSTOM_JWT_BASE64_SECRET', null));
+    $customJwtToken = $request->getHeader($customJwtHeaderName, '');
+
+    // @TOOD remove var_dump
+    var_dump("_APP_CUSTOM_JWT_ALWAYS_CHECK: {$alwaysCheckCustomJWT}");
+    var_dump("_APP_CUSTOM_JWT_HEADER_NAME: {$customJwtHeaderName}");
+    var_dump("CUSTOM JWT TOKEN: {$customJwtToken}");
+
+    if ($alwaysCheckCustomJWT && !$customJwtSecret) {
+        throw new Exception("Empty value for the env var _APP_CUSTOM_JWT_BASE64_SECRET", 500);
+    }
+
+    if ($alwaysCheckCustomJWT && empty($customJwtToken)) {
+        throw new Exception("No token on the custom JWT Header: {$customJwtHeaderName}", 400);
+    }
+
+    if (!empty($customJwtToken)) {
+        // @TODO Check if the JWT library checks the `exp` claim in the token
+        $customJWT = new JWT($customJwtSecret, 'HS256', $customJwtMaxAgeSeconds, $customJwtLeewaySeconds); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $customJwtPayload = $customJWT->decode($customJwtToken);
+
+            // @TOOD remove var_dump
+            var_dump("CUSTOM JWT PAYLOAD:", $customJwtPayload);
+        } catch (JWTException $error) {
+            throw new Exception("Failed to verify Custom JWT from Header {$customJwtHeaderName} with error: {$error->getMessage()}", 401);
+        }
+    }
+
+    // END - CUSTOM JWT IMPLEMENTATION
+
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT)) { // JWT authentication
